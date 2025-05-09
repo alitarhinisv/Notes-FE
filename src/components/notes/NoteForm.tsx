@@ -73,31 +73,13 @@ const NoteForm: React.FC<NoteFormProps> = ({
                     />
                 </div>
 
-                <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                        <input
-                            id="isPrivate"
-                            name="isPrivate"
-                            type="checkbox"
-                            checked={isPrivate}
-                            onChange={(e) => setIsPrivate(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="ml-3 text-sm">
-                        <label htmlFor="isPrivate" className="font-medium text-gray-700">
-                            Private Note
-                        </label>
-                        <p className="text-gray-500">Keep this note private and don't share it with others.</p>
-                    </div>
-                </div>
 
                 <div className="flex justify-end">
                     <button
                         type="submit"
                         className={`inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm ${
                             isLoading
-                                ? 'bg-blue-400 cursor-not-allowed'
+                                ? 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                                 : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                         }`}
                     >
