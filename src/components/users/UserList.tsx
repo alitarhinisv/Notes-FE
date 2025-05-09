@@ -71,9 +71,7 @@ const UserList: React.FC = () => {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Role
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created At
-                    </th>
+
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                     </th>
@@ -95,9 +93,7 @@ const UserList: React.FC = () => {
                   {user.role}
                 </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <Button
                                 variant="danger"
