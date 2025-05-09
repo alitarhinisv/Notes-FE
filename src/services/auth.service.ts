@@ -5,6 +5,7 @@ import { User, UserProfile } from '../types/user.types';
 
 export const loginUser = async (credentials: UserLogin): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>('/auth/login', credentials);
+    console.log(response.data)
     const { token, user } = response.data;
     setToken(token);
     return response.data;

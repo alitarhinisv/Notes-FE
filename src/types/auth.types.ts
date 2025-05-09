@@ -16,11 +16,6 @@ export interface AuthContextType extends AuthState {
     clearError: () => void;
 }
 
-export interface LoginResponse {
-    token: string;
-    user: User;
-}
-
 export interface UserLogin {
     email: string;
     password: string;
