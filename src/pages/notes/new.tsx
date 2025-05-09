@@ -12,7 +12,7 @@ const NewNote: NextPage = () => {
     const router = useRouter();
     const [formError, setFormError] = useState<string | null>(null);
 
-    const handleSubmit = async (noteData: CreateNoteDto) => {
+    const handleSubmit = async (noteData: any) => {
         try {
             setFormError(null); // Clear previous errors
             const newNote = await addNote(noteData);

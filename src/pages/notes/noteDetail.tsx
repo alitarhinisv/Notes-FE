@@ -5,14 +5,14 @@ import Layout from '../../components/layout/Layout';
 import NoteForm from '../../components/notes/NoteForm';
 import { withAuth } from '../../contexts/AuthContext';
 import { useNotes } from '../../hooks/useNotes';
-import {CreateNoteDto, UpdateNoteDto} from '../../types/note.types';
+import { CreateNoteDto } from '../../types/note.types';
 
 const NewNote: NextPage = () => {
     const { addNote, loading, error } = useNotes();
     const router = useRouter();
     const [formError, setFormError] = useState<string | null>(null);
 
-    const handleSubmit = async (noteData: CreateNoteDto | UpdateNoteDto) => {
+    const handleSubmit = async (noteData: any) => {
         try {
             setFormError(null); // Clear previous errors
             const newNote = await addNote(noteData);
@@ -43,7 +43,11 @@ const NewNote: NextPage = () => {
 
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
-                        <NoteForm onSubmit={handleSubmit} isLoading={loading} initialNote={undefined} />
+                        <NoteForm
+                            onSubmit={handleSubmit}
+                            isLoading={loading}
+                            initialNote={undefined}
+                        />
                     </div>
                 </div>
             </div>
