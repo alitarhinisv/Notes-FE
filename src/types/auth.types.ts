@@ -14,6 +14,7 @@ export interface AuthContextType extends AuthState {
     logout: () => void;
     updateProfile: (profileData: UserProfile) => Promise<void>;
     clearError: () => void;
+    reloadUser: () => Promise<void>;
 }
 
 export interface UserLogin {

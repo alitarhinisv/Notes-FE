@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
 import {
     AuthContextType,
     AuthState,
@@ -13,7 +13,7 @@ import {
     updateUserProfile
 } from '../services/auth.service';
 import { UserProfile, UserRegistration } from '../types/user.types';
-import { getToken } from '../utils/tokenStorage';
+import { getToken, setToken } from '../utils/tokenStorage';
 import { useRouter } from 'next/router';
 
 // Initial state
@@ -33,6 +33,7 @@ export const AuthContext = createContext<AuthContextType>({
     logout: () => {},
     updateProfile: async () => {},
     clearError: () => {},
+    reloadUser: async () => {},
 });
 
 // Action types
@@ -43,7 +44,8 @@ type AuthAction =
     | { type: 'AUTH_ERROR'; payload: string }
     | { type: 'USER_LOADED'; payload: any }
     | { type: 'PROFILE_UPDATED'; payload: any }
-    | { type: 'CLEAR_ERROR' };
+    | { type: 'CLEAR_ERROR' }
+    | { type: 'SET_LOADING'; payload: boolean };
 
 // Reducer
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -89,6 +91,11 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
                 ...state,
                 error: null,
             };
+        case 'SET_LOADING':
+            return {
+                ...state,
+                loading: action.payload,
+            };
         default:
             return state;
     }
@@ -99,36 +106,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [state, dispatch] = useReducer(authReducer, initialState);
     const router = useRouter();
 
+    const loadUser = useCallback(async () => {
+        const token = getToken();
+
+        if (!token) {
+            dispatch({ type: 'LOGOUT' });
+            return;
+        }
+
+        dispatch({ type: 'SET_LOADING', payload: true });
+        try {
+            const userData = await getCurrentUser();
+            dispatch({ type: 'USER_LOADED', payload: userData });
+        } catch (error) {
+            dispatch({ type: 'AUTH_ERROR', payload: 'Authentication failed' });
+        }
+    }, []);
+
     // Check if the user is authenticated on component mount
     useEffect(() => {
-        const loadUser = async () => {
-            const token = getToken();
-
-            if (!token) {
-                dispatch({ type: 'LOGOUT' });
-                return;
-            }
-
-            try {
-                const userData = await getCurrentUser();
-                dispatch({ type: 'USER_LOADED', payload: userData });
-            } catch (error) {
-                dispatch({ type: 'AUTH_ERROR', payload: 'Authentication failed' });
-            }
-        };
-
         loadUser();
-    }, []);
+    }, [loadUser]);
+
+    // Reload user data
+    const reloadUser = async () => {
+        await loadUser();
+    };
 
     // Login function
     const login = async (credentials: UserLogin) => {
         try {
             const data = await loginUser(credentials);
+            setToken(data.token);
             dispatch({
                 type: 'LOGIN_SUCCESS',
                 payload: { user: data.user, token: data.token },
             });
-            router.push('/dashboard');
+            // Add a small delay and refresh after successful login
+            await router.push('/dashboard');
+            setTimeout(() => {
+                window.location.reload();
+            }, 10);
         } catch (error: any) {
             dispatch({
                 type: 'AUTH_ERROR',
@@ -163,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const updatedUser = await updateUserProfile(profileData);
             dispatch({ type: 'PROFILE_UPDATED', payload: updatedUser });
+            await loadUser(); // Reload user data after profile update
         } catch (error: any) {
             dispatch({
                 type: 'AUTH_ERROR',
@@ -185,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 logout,
                 updateProfile,
                 clearError,
+                reloadUser,
             }}
         >
             {children}

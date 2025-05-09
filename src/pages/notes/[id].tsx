@@ -6,45 +6,51 @@ import NoteForm from '../../components/notes/NoteForm';
 import NoteEditor from '../../components/notes/NoteEditor';
 import ShareNoteModal from '../../components/notes/ShareNoteModal';
 import Button from '../../components/ui/Button';
-import { withAuth } from '../../contexts/AuthContext';
+import { withAuth, useAuth } from '../../contexts/AuthContext';
 import { useNotes } from '../../hooks/useNotes';
 import { UpdateNoteDto } from '../../types/note.types';
 
 const NoteDetail: NextPage = () => {
     const router = useRouter();
     const { id } = router.query;
+    const { user, loading: authLoading } = useAuth();
     const {
         currentNote,
         fetchNoteById,
         editNote,
         removeNote,
-        loading,
+        loading: noteLoading,
         error
     } = useNotes();
     const [formError, setFormError] = useState<string | null>(null);
     const [isShared, setIsShared] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
+    const isNoteOwner = () => {
+        if (!currentNote || !user) return false;
+        const noteOwner = typeof currentNote.owner === 'string' 
+            ? currentNote.owner 
+            : currentNote.owner.username;
+        return noteOwner === user.username;
+    };
+
     useEffect(() => {
-        if (id && typeof id === 'string') {
+        if (id && typeof id === 'string' && !authLoading) {
             const loadNote = async () => {
                 try {
                     const note = await fetchNoteById(id);
-                    console.log(note);
                     if(note.sharedWith.length == 0) {
                         setIsShared(false);
                     } else {
                         setIsShared(true);
                     }
-
                 } catch (err) {
                     // Error is handled in the hook
                 }
             };
             loadNote();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    }, [id, authLoading, fetchNoteById]);
 
     const handleUpdate = async (noteData: UpdateNoteDto) => {
         if (!id || typeof id !== 'string') return;
@@ -58,7 +64,7 @@ const NoteDetail: NextPage = () => {
     };
 
     const handleDelete = async () => {
-        if (!id || typeof id !== 'string') return;
+        if (!id || typeof id !== 'string' || !isNoteOwner()) return;
 
         if (window.confirm('Are you sure you want to delete this note?')) {
             try {
@@ -71,10 +77,11 @@ const NoteDetail: NextPage = () => {
     };
 
     const handleShare = () => {
+        if (!isNoteOwner()) return;
         setIsShareModalOpen(true);
     };
 
-    if (loading && !currentNote) {
+    if (authLoading || (noteLoading && !currentNote)) {
         return (
             <Layout>
                 <div className="flex justify-center items-center py-12">
@@ -101,19 +108,23 @@ const NoteDetail: NextPage = () => {
         );
     }
 
+    const canEdit = isNoteOwner();
+
     return (
         <Layout>
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="py-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-semibold text-gray-900">{isShared ? 'View Note' : 'Edit Note'}</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900">{canEdit ? 'Edit Note' : 'View Note'}</h1>
                         <p className="mt-1 text-sm text-gray-500">
-                            {isShared
-                                ? 'This note has been shared with you. You can view but not edit it.'
-                                : 'Make changes to your note and save them.'}
+                            {canEdit
+                                ? 'Make changes to your note and save them.'
+                                : isNoteOwner()
+                                    ? 'This note has been shared with others. You cannot edit it.'
+                                    : 'This note belongs to another user. You can only view it.'}
                         </p>
                     </div>
-                    {!isShared && (
+                    {isNoteOwner() && (
                         <div className="flex space-x-3">
                             <Button variant="primary" onClick={handleShare}>
                                 Share
@@ -133,7 +144,7 @@ const NoteDetail: NextPage = () => {
 
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
-                        {isShared ? (
+                        {!canEdit ? (
                             <div className="space-y-6">
                                 <div>
                                     <h2 className="text-xl font-medium text-gray-900 mb-4">{currentNote.title}</h2>
@@ -148,7 +159,7 @@ const NoteDetail: NextPage = () => {
                             <NoteForm
                                 initialNote={currentNote}
                                 onSubmit={handleUpdate}
-                                isLoading={loading}
+                                isLoading={noteLoading}
                             />
                         )}
                     </div>
