@@ -4,19 +4,22 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '../../components/layout/Layout';
 import NoteList from '../../components/notes/NoteList';
-import { withAuth } from '../../contexts/AuthContext';
+import { withAuth, useAuth } from '../../contexts/AuthContext';
 import { useNotes } from '../../hooks/useNotes';
 import { Note } from '../../types/note.types';
 
 const Dashboard: NextPage = () => {
     const { notes, sharedNotes, fetchNotes, fetchSharedNotes, loading, error } = useNotes();
+    const { user } = useAuth();
     const [recentNotes, setRecentNotes] = useState<Note[]>([]);
     const [recentSharedNotes, setRecentSharedNotes] = useState<Note[]>([]);
     const router = useRouter();
 
     useEffect(() => {
         fetchNotes();
-        fetchSharedNotes();
+        if (user?.role !== 'admin') {
+            fetchSharedNotes();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -73,27 +76,29 @@ const Dashboard: NextPage = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white overflow-hidden shadow rounded-lg flex-1">
-                        <div className="px-4 py-5 sm:p-6">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                                    <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                </div>
-                                <div className="ml-5">
-                                    <h3 className="text-lg font-medium text-gray-900">Shared With Me</h3>
-                                    <div className="mt-1 text-3xl font-semibold text-gray-900">{sharedNotes.length}</div>
+                    {user?.role !== 'admin' && (
+                        <div className="bg-white overflow-hidden shadow rounded-lg flex-1">
+                            <div className="px-4 py-5 sm:p-6">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                        <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-5">
+                                        <h3 className="text-lg font-medium text-gray-900">Shared With Me</h3>
+                                        <div className="mt-1 text-3xl font-semibold text-gray-900">{sharedNotes.length}</div>
+                                    </div>
                                 </div>
                             </div>
+                            <div className="bg-gray-50 px-4 py-4 sm:px-6">
+                                <Link href="/notes/shared" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    View shared notes
+                                </Link>
+                            </div>
                         </div>
-                        <div className="bg-gray-50 px-4 py-4 sm:px-6">
-                            <Link href="/notes/shared" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                                View shared notes
-                            </Link>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div className="mt-8">
@@ -125,22 +130,24 @@ const Dashboard: NextPage = () => {
                     </div>
                 </div>
 
-                <div className="mt-8">
-                    <h2 className="text-lg font-medium text-gray-900">Recent Shared Notes</h2>
-                    <div className="mt-4">
-                        {loading ? (
-                            <div className="flex justify-center items-center py-12">
-                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                            </div>
-                        ) : error ? (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                                <span className="block sm:inline">{error}</span>
-                            </div>
-                        ) : (
-                            <NoteList notes={recentSharedNotes} isShared />
-                        )}
+                {user?.role !== 'admin' && (
+                    <div className="mt-8">
+                        <h2 className="text-lg font-medium text-gray-900">Recent Shared Notes</h2>
+                        <div className="mt-4">
+                            {loading ? (
+                                <div className="flex justify-center items-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                                </div>
+                            ) : error ? (
+                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                                    <span className="block sm:inline">{error}</span>
+                                </div>
+                            ) : (
+                                <NoteList notes={recentSharedNotes} isShared />
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </Layout>
     );
