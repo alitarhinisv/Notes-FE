@@ -30,7 +30,13 @@ const NoteDetail: NextPage = () => {
             const loadNote = async () => {
                 try {
                     const note = await fetchNoteById(id);
-                    setIsShared(!!note.isShared);
+                    console.log(note);
+                    if(note.sharedWith.length == 0) {
+                        setIsShared(false);
+                    } else {
+                        setIsShared(true);
+                    }
+
                 } catch (err) {
                     // Error is handled in the hook
                 }

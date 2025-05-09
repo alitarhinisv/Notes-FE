@@ -7,6 +7,7 @@ export interface Note {
     owner: User | string;
     createdAt: string;
     updatedAt: string;
+    sharedWith: [];
     isPrivate?: boolean;
     isShared?: boolean;
 }
